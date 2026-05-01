@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reporte — Sistema de Novedades · Level Security</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap');
+
+  :root {
+    --cyan:    #00cfff;
+    --violet:  #7c3aff;
+    --green:   #00ff99;
+    --yellow:  #ffd740;
+    --red:     #ff4444;
+    --navy:    #07101f;
+    --navy2:   #040d1a;
+    --navy3:   #0b1929;
+    --text:    #d0eeff;
+    --text2:   #7aadcc;
+    --border:  rgba(0,207,255,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── PANTALLA DE BÚSQUEDA ─────────────────────── */
+  #search-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(0,207,255,0.08) 0%, transparent 60%),
+                var(--navy);
+  }
+
+  .logo-block {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .logo-block .brand {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+  .logo-block .sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: rgba(0,207,255,0.4);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .logo-line {
+    width: 120px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    margin: 16px auto;
+  }
+
+  .search-card {
+    background: var(--navy2);
+    border: 1px solid rgba(0,207,255,0.2);
+    border-radius: 8px;
+    padding: 36px 40px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 0 40px rgba(0,207,255,0.05);
+  }
+  .search-card h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    color: rgba(0,207,255,0.6);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .input-group {
+    margin-bottom: 20px;
+  }
+  .input-group label {
+    display: block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: rgba(0,207,255,0.5);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .input-group input {
+    width: 100%;
+    background: rgba(0,207,255,0.05);
+    border: 1px solid rgba(0,207,255,0.25);
+    border-radius: 4px;
+    padding: 12px 16px;
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-group input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 12px rgba(0,207,255,0.15);
+  }
+  .input-group input::placeholder { color: rgba(0,207,255,0.2); }
+
+  .btn-generate {
+    width: 100%;
+    padding: 14px;
+    background: rgba(0,207,255,0.1);
+    border: 1px solid rgba(0,207,255,0.4);
+    border-radius: 4px;
+    color: var(--cyan);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-generate:hover {
+    background: rgba(0,207,255,0.18);
+    box-shadow: 0 0 20px rgba(0,207,255,0.15);
+  }
+
+  #error-msg {
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: rgba(255,68,68,0.1);
+    border: 1px solid rgba(255,68,68,0.3);
+    border-radius: 4px;
+    color: #ff8080;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    display: none;
+  }
+  #loading-msg {
+    margin-top: 16px;
+    color: rgba(0,207,255,0.5);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-align: center;
+    display: none;
+  }
+
+  /* ── REPORTE ─────────────────────────────────── */
+  #report-screen { display: none; }
+
+  .report-actions {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: var(--navy2);
+    border-bottom: 1px solid rgba(0,207,255,0.2);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .report-actions .ra-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: rgba(0,207,255,0.5);
+    text-transform: uppercase;
+  }
+  .ra-buttons { display: flex; gap: 10px; }
+  .btn-print {
+    padding: 8px 20px;
+    background: rgba(0,255,153,0.1);
+    border: 1px solid rgba(0,255,153,0.4);
+    border-radius: 4px;
+    color: var(--green);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-print:hover { background: rgba(0,255,153,0.18); }
+  .btn-back {
+    padding: 8px 20px;
+    background: rgba(0,207,255,0.08);
+    border: 1px solid rgba(0,207,255,0.3);
+    border-radius: 4px;
+    color: var(--cyan);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-back:hover { background: rgba(0,207,255,0.15); }
+
+  .report-wrap {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 80px 20px 60px;
+  }
+
+  /* ── POPUP CARD ──────────────────────────────── */
+  .popup-card {
+    background: var(--navy);
+    border: 1.5px solid var(--cyan);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: var(--navy2);
+    border-bottom: 1px solid rgba(0,207,255,0.27);
+    padding: 12px 16px;
+  }
+  .popup-header .brand-block { display: flex; align-items: center; gap: 10px; }
+  .popup-header .brand-icon {
+    width: 32px; height: 32px;
+    background: rgba(0,207,255,0.07);
+    border: 1px solid rgba(0,207,255,0.4);
+    border-radius: 4px;
+  }
+  .popup-header .brand-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    text-transform: uppercase;
+  }
+  .popup-header .brand-sub {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(0,207,255,0.35);
+    text-transform: uppercase;
+  }
+  .folio-badge {
+    background: rgba(0,207,255,0.07);
+    border: 1px solid rgba(0,207,255,0.27);
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    color: var(--cyan);
+  }
+
+  .popup-body { padding: 12px 16px; }
+
+  .section-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+    margin: 14px 0 8px;
+  }
+  .section-title:first-child { margin-top: 4px; }
+
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 5px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px; }
+  .grid-1 { margin-bottom: 5px; }
+
+  .field {
+    background: var(--navy3);
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    border-left: 2px solid rgba(124,58,255,0.4);
+    border-radius: 4px;
+    padding: 7px 10px;
+  }
+  .field .lbl {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: rgba(0,207,255,0.5);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .field .val {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    word-break: break-word;
+  }
+  .field .val.cyan  { color: var(--cyan); }
+  .field .val.text2 { color: var(--text2); font-weight: 400; line-height: 1.5; }
+
+  .badge {
+    display: inline-block;
+    border-radius: 3px;
+    padding: 2px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .badge-violet { background: rgba(124,58,255,0.1);  border: 1px solid rgba(124,58,255,0.35); color: #b07fff; }
+  .badge-yellow { background: rgba(255,196,0,0.1);   border: 1px solid rgba(255,196,0,0.35);  color: var(--yellow); }
+  .badge-green  { background: rgba(0,255,153,0.1);   border: 1px solid rgba(0,255,153,0.35); color: var(--green); }
+  .badge-red    { background: rgba(255,68,68,0.1);   border: 1px solid rgba(255,68,68,0.35); color: #ff8080; }
+  .badge-cyan   { background: rgba(0,207,255,0.07);  border: 1px solid rgba(0,207,255,0.27); color: var(--cyan); }
+
+  .sep { height: 1px; background: rgba(0,207,255,0.08); margin: 10px 0; }
+
+  .popup-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px;
+    background: var(--navy2);
+    border-top: 1px solid rgba(0,207,255,0.13);
+    padding: 7px 16px;
+  }
+  .popup-footer .ft-left {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(0,207,255,0.2);
+    text-transform: uppercase;
+  }
+  .popup-footer .ft-right {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 1px;
+  }
+  .popup-footer .ft-right span { color: rgba(0,255,153,0.4); }
+
+  /* ── PRINT ───────────────────────────────────── */
+  @media print {
+    @page { margin: 10mm; size: A4; }
+    body { background: #fff !important; color: #111 !important; }
+    .report-actions { display: none !important; }
+    .report-wrap { padding: 0 !important; max-width: 100% !important; }
+    #search-screen { display: none !important; }
+    #report-screen { display: block !important; }
+
+    .popup-card { border: 1.5px solid #1a4a6e !important; background: #fff !important; }
+    .popup-header { background: #1F3864 !important; }
+    .popup-header .brand-name, .folio-badge { color: #fff !important; }
+    .popup-header .brand-sub { color: rgba(255,255,255,0.5) !important; }
+    .popup-footer { background: #f0f4f8 !important; }
+    .popup-footer .ft-left { color: #666 !important; }
+    .popup-footer .ft-right { color: #1a7a4a !important; }
+    .popup-footer .ft-right span { color: #888 !important; }
+
+    .field { background: #f7fafc !important; border-left-color: #2E5DA6 !important; border-color: #ccdde8 !important; }
+    .field .lbl { color: #2E5DA6 !important; }
+    .field .val { color: #111 !important; }
+    .field .val.cyan  { color: #1a4a8a !important; }
+    .field .val.text2 { color: #333 !important; }
+
+    .badge-violet { background: #f0eaff !important; border-color: #7c3aff !important; color: #5a1adf !important; }
+    .badge-yellow { background: #fff8e0 !important; border-color: #c9a000 !important; color: #7a5f00 !important; }
+    .badge-green  { background: #e0fff3 !important; border-color: #00a060 !important; color: #006640 !important; }
+    .badge-red    { background: #ffe8e8 !important; border-color: #cc0000 !important; color: #880000 !important; }
+    .badge-cyan   { background: #e0f4ff !important; border-color: #1a7ab0 !important; color: #0a4a80 !important; }
+    .section-title { color: #1F3864 !important; }
+    .sep { background: #ccdde8 !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ PANTALLA DE BÚSQUEDA ══════════════════════ -->
+<div id="search-screen">
+  <div class="logo-block">
+    <div class="brand">Sistema de Novedades</div>
+    <div class="logo-line"></div>
+    <div class="sub">Level Security · Generador de Reportes</div>
+  </div>
+  <div class="search-card">
+    <h2>Ingrese el N° de Folio</h2>
+    <div class="input-group">
+      <label>ObjectID / Folio</label>
+      <input type="number" id="oid-input" placeholder="Ej: 28" min="1" />
+    </div>
+    <button class="btn-generate" onclick="fetchRecord()">Generar Reporte</button>
+    <div id="error-msg"></div>
+    <div id="loading-msg">▶ CONSULTANDO CAPA · ESPERE...</div>
+  </div>
+</div>
+
+<!-- ══ REPORTE ════════════════════════════════════ -->
+<div id="report-screen">
+  <div class="report-actions">
+    <span class="ra-title">Sistema de Novedades · Level Security</span>
+    <div class="ra-buttons">
+      <button class="btn-back" onclick="goBack()">← Nueva consulta</button>
+      <button class="btn-print" onclick="window.print()">⎙ Imprimir / PDF</button>
+    </div>
+  </div>
+  <div class="report-wrap">
+    <div class="popup-card" id="popup-card"></div>
+  </div>
+</div>
+
+<script>
+const LAYER_URL = "https://services6.arcgis.com/Zur5xA3P6qSHjaWU/arcgis/rest/services/service_d754751f980a437ea21d182e2ecf0cfb/FeatureServer/0";
+
+function impactColor(val) {
+  if (!val) return '';
+  const v = val.toLowerCase();
+  if (v === 'critico' || v === 'crítico') return 'badge badge-red';
+  if (v === 'alto') return 'badge badge-violet';
+  return '';
+}
+
+function field(label, value, cls = '') {
+  const display = (value && value !== 'null' && value !== 'undefined') ? value : '—';
+  return `<div class="field">
+    <div class="lbl">${label}</div>
+    <div class="val ${cls}">${display}</div>
+  </div>`;
+}
+
+function badgeField(label, value, badgeClass) {
+  const display = (value && value !== 'null') ? value : '—';
+  return `<div class="field">
+    <div class="lbl">${label}</div>
+    <div class="val"><span class="${badgeClass}">${display}</span></div>
+  </div>`;
+}
+
+function renderReport(f) {
+  const nivelClass = impactColor(f.Nivel_de_Impacto);
+  const nivelHTML = nivelClass
+    ? `<span class="${nivelClass}">${f.Nivel_de_Impacto}</span>`
+    : `<span>${f.Nivel_de_Impacto || '—'}</span>`;
+
+  return `
+  <div class="popup-header">
+    <div class="brand-block">
+      <div class="brand-icon"></div>
+      <div>
+        <div class="brand-name">Sistema de Novedades</div>
+        <div class="brand-sub">Level Security</div>
+      </div>
+    </div>
+    <div class="folio-badge">FOLIO #${f.OBJECTID || f.objectid || '—'}</div>
+  </div>
+
+  <div class="popup-body">
+
+    <div class="section-title">Tipo de Evento</div>
+    <div class="grid-3">
+      ${field('Categoría', f.Cate)}
+      ${field('Familia evento', f.Fam_event)}
+      ${field('Tipo evento', f.Tipo_even)}
+    </div>
+    <div class="grid-1">${field('Otro hecho', f.Otro_hecho)}</div>
+    <div class="grid-1">${badgeField('Clasificación espacial', f.Clasif_espacial, 'badge badge-violet')}</div>
+
+    <div class="sep"></div>
+
+    <div class="section-title">Temporalidad</div>
+    <div class="grid-3">
+      ${field('Turno ingreso', f.Turno_ingreso, 'cyan')}
+      ${field('Fecha hecho', f.Fecha_hec, 'cyan')}
+      ${field('Día semana', f.Dia_sem, 'cyan')}
+    </div>
+    <div class="grid-2">
+      ${field('Hora del hecho', f.Hora_hec, 'cyan')}
+      ${field('Rango hora', f.Rango_hora, 'cyan')}
+    </div>
+    <div class="grid-1">${field('Lugar del hecho', f.lugar, 'cyan')}</div>
+
+    <div class="sep"></div>
+
+    <div class="section-title">Evaluación de Riesgo</div>
+    <div class="grid-3">
+      <div class="field">
+        <div class="lbl">Nivel impacto</div>
+        <div class="val">${nivelHTML}</div>
+      </div>
+      ${badgeField('Prob. ocurrencia', f.Prob_ocurrencia, 'badge badge-yellow')}
+      ${field('Afectación', f.Afectacion)}
+    </div>
+    <div class="grid-1">${badgeField('Ámbito minero', f.Amb_miner, 'badge badge-cyan')}</div>
+
+    <div class="sep"></div>
+
+    <div class="section-title">Inteligencia & Validación</div>
+    <div class="grid-1">${field('Atributos de inteligencia', f.Informacion, 'text2')}</div>
+    <div class="grid-2">
+      ${field('Fuente información', f.Fuente_informacion)}
+      ${badgeField('Nivel validación', f.Nivel_de_validacion, 'badge badge-green')}
+      ${field('Vinculación', f.Vinculacion)}
+      ${field('Solic. Carab / PDI', f.Solic_carab_pdi)}
+      ${badgeField('Reincidencia', f.Reincidencia, 'badge badge-red')}
+      ${field('T. respuesta', f.Tiempo_respuesta, 'cyan')}
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="section-title">Descripción del Hecho</div>
+    <div class="grid-1">${field('', f.Descrip, 'text2')}</div>
+
+    <div class="sep"></div>
+
+    <div class="section-title">Acciones & Recomendaciones</div>
+    <div class="grid-1">${field('Medidas adoptadas', f.Med_adop, 'text2')}</div>
+    <div class="grid-1">${field('Recomendaciones', f.Recom, 'text2')}</div>
+
+  </div>
+
+  <div class="popup-footer">
+    <div class="ft-left">Level Security · Sistema de Novedades · Documento de uso interno</div>
+    <div class="ft-right"><span>T. RESP · </span>${f.Tiempo_respuesta || '—'}</div>
+  </div>`;
+}
+
+async function fetchRecord() {
+  const oid = document.getElementById('oid-input').value.trim();
+  const errEl = document.getElementById('error-msg');
+  const loadEl = document.getElementById('loading-msg');
+
+  errEl.style.display = 'none';
+  if (!oid || isNaN(oid) || parseInt(oid) < 1) {
+    errEl.textContent = '⚠ Ingrese un número de folio válido.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  loadEl.style.display = 'block';
+  document.querySelector('.btn-generate').disabled = true;
+
+  const url = `${LAYER_URL}/query?where=OBJECTID=${parseInt(oid)}&outFields=*&f=json`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.features || data.features.length === 0) {
+      errEl.textContent = `⚠ No se encontró registro con Folio N° ${oid}.`;
+      errEl.style.display = 'block';
+      loadEl.style.display = 'none';
+      document.querySelector('.btn-generate').disabled = false;
+      return;
+    }
+
+    const attrs = data.features[0].attributes;
+    document.getElementById('popup-card').innerHTML = renderReport(attrs);
+    document.getElementById('search-screen').style.display = 'none';
+    document.getElementById('report-screen').style.display = 'block';
+
+  } catch(e) {
+    errEl.textContent = '⚠ Error al consultar la capa. Verifique su conexión.';
+    errEl.style.display = 'block';
+  }
+
+  loadEl.style.display = 'none';
+  document.querySelector('.btn-generate').disabled = false;
+}
+
+function goBack() {
+  document.getElementById('report-screen').style.display = 'none';
+  document.getElementById('search-screen').style.display = 'flex';
+}
+
+// Enter key trigger
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('oid-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') fetchRecord();
+  });
+
+  // Si viene ?oid=XX en la URL, carga directo
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('oid')) {
+    document.getElementById('oid-input').value = params.get('oid');
+    fetchRecord();
+  }
+});
+</script>
+</body>
+</html>
