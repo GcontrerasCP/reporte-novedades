@@ -442,6 +442,19 @@ function field(label, value, cls = '') {
   </div>`;
 }
 
+function formatFecha(val) {
+  if (!val || val === 'null') return '—';
+  // Si es timestamp numérico (milisegundos epoch)
+  if (!isNaN(val) && String(val).length > 8) {
+    const d = new Date(Number(val));
+    const dia = String(d.getDate()).padStart(2,'0');
+    const mes = String(d.getMonth()+1).padStart(2,'0');
+    const anio = d.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
+  return val;
+}
+
 function badgeField(label, value, badgeClass) {
   const display = (value && value !== 'null') ? value : '—';
   return `<div class="field">
@@ -484,7 +497,7 @@ function renderReport(f) {
     <div class="section-title">Temporalidad</div>
     <div class="grid-3">
       ${field('Turno ingreso', f.Turno_ingreso, 'cyan')}
-      ${field('Fecha hecho', f.Fecha_hec, 'cyan')}
+      ${field('Fecha hecho', formatFecha(f.Fecha_hec), 'cyan')}
       ${field('Día semana', f.Dia_sem, 'cyan')}
     </div>
     <div class="grid-2">
